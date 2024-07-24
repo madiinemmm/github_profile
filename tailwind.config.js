@@ -1,19 +1,16 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  darkMode: "class",
   theme: {
-    extend: {},
+    extend: {
+      boxShadow: {
+        inputBoxShadow: "0px 16px 30px -10px #4660BB33",
+      },
+    },
   },
-  plugins: [require('daisyui')],
+  plugins: [require("daisyui")],
   daisyui: {
-    themes: [
-      'light', 
-      'dark', 
-      'cupcake', 
-     
-    ],
+    themes: ["light", "dark", "cupcake"],
   },
-}
+};
