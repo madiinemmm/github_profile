@@ -8,7 +8,7 @@ import { SlSocialTwitter } from "react-icons/sl";
 import { PiBuildings } from "react-icons/pi";
 import DefaultAvatar from "./assets/blank-profile-picture-973460_640.png";
 import ReactApexChart from "react-apexcharts";
-import Modal from "./components/Modal"; // Import the Modal component
+import Modal from "./components/Modal";
 
 function Piechart({ data, categories }) {
   const [chartData, setChartData] = useState({
@@ -98,8 +98,8 @@ function App() {
   const [followingList, setFollowingList] = useState([]);
   const [reposList, setReposList] = useState([]);
 
-  const [modalType, setModalType] = useState(""); // Modal type state
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal open state
+  const [modalType, setModalType] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const inputText = useRef();
 
@@ -166,7 +166,9 @@ function App() {
   const getFollowersData = (username) => {
     fetch(`https://api.github.com/users/${username}/followers`)
       .then((data) => data.json())
-      .then((followers) => setFollowersList(followers.map((follower) => follower.login)))
+      .then((followers) =>
+        setFollowersList(followers.map((follower) => follower.login))
+      )
       .catch((err) => {
         setError("Failed to fetch followers");
       });
@@ -175,7 +177,9 @@ function App() {
   const getFollowingData = (username) => {
     fetch(`https://api.github.com/users/${username}/following`)
       .then((data) => data.json())
-      .then((following) => setFollowingList(following.map((following) => following.login)))
+      .then((following) =>
+        setFollowingList(following.map((following) => following.login))
+      )
       .catch((err) => {
         setError("Failed to fetch following");
       });
@@ -283,8 +287,7 @@ function App() {
                 </h1>
                 <button
                   className="text-blue-500 mt-2"
-                  onClick={() => handleOpenModal('Repos')}
-                >
+                  onClick={() => handleOpenModal("Repos")}>
                   View Repos
                 </button>
               </div>
@@ -295,8 +298,7 @@ function App() {
                 </h1>
                 <button
                   className="text-blue-500 mt-2"
-                  onClick={() => handleOpenModal('Followers')}
-                >
+                  onClick={() => handleOpenModal("Followers")}>
                   View Followers
                 </button>
               </div>
@@ -307,8 +309,7 @@ function App() {
                 </h1>
                 <button
                   className="text-blue-500 mt-2"
-                  onClick={() => handleOpenModal('Following')}
-                >
+                  onClick={() => handleOpenModal("Following")}>
                   View Following
                 </button>
               </div>
@@ -324,7 +325,7 @@ function App() {
                 <div className="flex gap-2 items-center mt-3">
                   <FaLink className="text-2xl" />
                   <a
-                    href={blog} 
+                    href={blog}
                     className="tracking-wide"
                     target="_blank"
                     rel="noopener noreferrer">
@@ -351,7 +352,9 @@ function App() {
             </div>
           </div>
           <div className="mt-8">
-            {categories && data && <Piechart categories={categories} data={data} />}
+            {categories && data && (
+              <Piechart categories={categories} data={data} />
+            )}
           </div>
         </div>
       </form>
@@ -359,9 +362,9 @@ function App() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         data={
-          modalType === 'Repos'
+          modalType === "Repos"
             ? reposList
-            : modalType === 'Followers'
+            : modalType === "Followers"
             ? followersList
             : followingList
         }

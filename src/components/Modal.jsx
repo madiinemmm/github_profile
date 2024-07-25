@@ -1,60 +1,42 @@
-import React, { useEffect, useRef } from "react";
-import ReactDOM from "react-dom";
+import React from "react";
+import { MdClose } from "react-icons/md";
 
 const Modal = ({ isOpen, onClose, data, type }) => {
-  const modalRef = useRef();
-
-  useEffect(() => {
-    // Event listener to close modal on click outside
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    // Attach event listener
-    document.addEventListener("mousedown", handleClickOutside);
-    
-    // Cleanup the event listener
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose]);
-
   if (!isOpen) return null;
 
-  return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div
-        ref={modalRef}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-11/12 sm:w-96"
-      >
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white dark:bg-[#12192A] p-8 rounded-lg w-[90%] md:w-[60%] lg:w-[40%] relative">
         <button
-          className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+          className="absolute top-4 right-4 text-2xl text-gray-500 dark:text-gray-300"
           onClick={onClose}
         >
-          &times;
+          <MdClose />
         </button>
-        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-          {type}
-        </h2>
-        <ul className="space-y-2">
+        <h2 className="text-xl font-bold mb-4">{type}</h2>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {data.map((item, index) => (
-            <li key={index}>
-              <a
-                href={`https://github.com/${item}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                {item}
-              </a>
-            </li>
+            <div
+              key={index}
+              className="flex items-center gap-4 p-4 border-b border-gray-300 dark:border-gray-600"
+            >
+              {type === "Repos" ? (
+                <img
+                  src={`https://avatars.githubusercontent.com/${item}`}
+                  alt={item}
+                  className="w-12 h-12 rounded-full"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+              )}
+              <div>
+                <h3 className="text-lg font-semibold">{item}</h3>
+              </div>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 };
 
