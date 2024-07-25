@@ -7,15 +7,80 @@ import { FaLink } from "react-icons/fa6";
 import { SlSocialTwitter } from "react-icons/sl";
 import { PiBuildings } from "react-icons/pi";
 import DefaultAvatar from "./assets/blank-profile-picture-973460_640.png";
-import Img from "./assets/Bitmap (26).png";
+import ReactApexChart from "react-apexcharts";
+import Modal from "./components/Modal"; // Import the Modal component
+
+function Piechart({ data, categories }) {
+  const [chartData, setChartData] = useState({
+    series: [{ data }],
+    options: {
+      chart: {
+        type: "bar",
+        height: 350,
+      },
+      plotOptions: {
+        bar: {
+          borderRadius: 4,
+          horizontal: true,
+        },
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      xaxis: {
+        categories,
+      },
+    },
+  });
+
+  return (
+    <div>
+      <div id="chart">
+        <ReactApexChart
+          options={chartData.options}
+          series={chartData.series}
+          type="bar"
+          height={350}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Form({ getData }) {
+  const inputText = useRef();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    getData(inputText.current.value);
+  };
+
+  return (
+    <div>
+      <form className="flex items-end gap-3" onSubmit={handleSubmit}>
+        <label className="form-control w-full max-w-xs">
+          <div className="label">
+            <span className="label-text">Username:</span>
+          </div>
+          <input
+            type="text"
+            placeholder="Type here"
+            className="input input-bordered w-full max-w-xs"
+            ref={inputText}
+          />
+        </label>
+        <button className="btn bg-secondary">Submit</button>
+      </form>
+    </div>
+  );
+}
 
 function App() {
-  // State o'zgaruvchilar
   const [username, setUsername] = useState("");
   const [followers, setFollowers] = useState(0);
   const [repos, setRepos] = useState(0);
   const [following, setFollowing] = useState(0);
-  const [bio, setBio] = useState("Bio is not defined");
+  const [bio, setBio] = useState("Bio not defined");
   const [profileImage, setProfileImage] = useState(DefaultAvatar);
   const [joinedDate, setJoinedDate] = useState("");
   const [location, setLocation] = useState("Not Available");
@@ -23,19 +88,28 @@ function App() {
   const [twitter, setTwitter] = useState("Not Available");
   const [company, setCompany] = useState("Not Available");
   const [error, setError] = useState("");
-  const inputText = useRef();
-
   const [theme, setTheme] = useState(
     () => localStorage.getItem("theme") || "light"
   );
+  const [reposData, setReposData] = useState(null);
+  const [categories, setCategories] = useState(null);
+  const [data, setData] = useState(null);
+  const [followersList, setFollowersList] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
+  const [reposList, setReposList] = useState([]);
+
+  const [modalType, setModalType] = useState(""); // Modal type state
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal open state
+
+  const inputText = useRef();
 
   useEffect(() => {
     document.documentElement.className = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  const getData = (userName) => {
-    fetch(`https://api.github.com/users/${userName}`)
+  const getUserData = (username) => {
+    fetch(`https://api.github.com/users/${username}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("User not found");
@@ -43,12 +117,11 @@ function App() {
         return response.json();
       })
       .then((user) => {
-        console.log(user);
         setUsername(user.login);
         setFollowers(user.followers);
         setRepos(user.public_repos);
         setFollowing(user.following);
-        setBio(user.bio || "Bio is not defined");
+        setBio(user.bio || "Bio not defined");
         setProfileImage(user.avatar_url || DefaultAvatar);
         setJoinedDate(new Date(user.created_at).toLocaleDateString());
         setLocation(user.location || "Not Available");
@@ -68,7 +141,7 @@ function App() {
         setFollowers(0);
         setRepos(0);
         setFollowing(0);
-        setBio("Bio is not defined");
+        setBio("Bio not defined");
         setProfileImage(DefaultAvatar);
         setJoinedDate("");
         setLocation("Not Available");
@@ -78,17 +151,81 @@ function App() {
       });
   };
 
+  const getReposData = (username) => {
+    fetch(`https://api.github.com/users/${username}/repos`)
+      .then((data) => data.json())
+      .then((repos) => {
+        setReposData(repos);
+        setReposList(repos.map((repo) => repo.name));
+      })
+      .catch((err) => {
+        setError("Failed to fetch repositories");
+      });
+  };
+
+  const getFollowersData = (username) => {
+    fetch(`https://api.github.com/users/${username}/followers`)
+      .then((data) => data.json())
+      .then((followers) => setFollowersList(followers.map((follower) => follower.login)))
+      .catch((err) => {
+        setError("Failed to fetch followers");
+      });
+  };
+
+  const getFollowingData = (username) => {
+    fetch(`https://api.github.com/users/${username}/following`)
+      .then((data) => data.json())
+      .then((following) => setFollowingList(following.map((following) => following.login)))
+      .catch((err) => {
+        setError("Failed to fetch following");
+      });
+  };
+
+  useEffect(() => {
+    if (username) {
+      getReposData(username);
+      getFollowersData(username);
+      getFollowingData(username);
+    }
+  }, [username]);
+
+  useEffect(() => {
+    if (reposData) {
+      const data = reposData.reduce((acc, curVal) => {
+        const { language } = curVal;
+        if (language) {
+          acc[language] = (acc[language] || 0) + 1;
+        }
+        return acc;
+      }, {});
+      const keys = Object.keys(data);
+      const values = Object.values(data);
+
+      setCategories(keys);
+      setData(values);
+    }
+  }, [reposData]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    getData(inputText.current.value);
+    getUserData(inputText.current.value);
   };
 
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
   };
 
+  const handleOpenModal = (type) => {
+    setModalType(type);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   return (
-    <div className="container mx-auto">
+    <div>
       <form onSubmit={handleSubmit}>
         <div className="flex justify-between mt-5">
           <div className="mt-1">
@@ -100,7 +237,7 @@ function App() {
             <ThemeController onThemeChange={handleThemeChange} />
           </div>
         </div>
-        <div className="w-full mt-5 rounded-[20px] h-[69px] dark:bg-[#12192A] bg-white shadow-inputBoxShadow">
+        <div className="w-[80%] mt-5 rounded-[20px] h-[69px] dark:bg-[#12192A] bg-white shadow-inputBoxShadow">
           <div className="flex gap-3 justify-between">
             <div className="flex gap-3 p-5">
               <CiSearch className="font-bold text-[24px] ml-2 text-[#0079FF]" />
@@ -117,7 +254,7 @@ function App() {
           </div>
         </div>
         {error && <div className="text-red-500 mt-4 text-center">{error}</div>}
-        <div className="h-[419px] bg-1E2A49 rounded-[18px] mt-8">
+        <div className="rounded-[18px] mt-8 p-10">
           <div className="flex p-16 justify-between h-[200px]">
             <div className="flex gap-11">
               <img
@@ -137,25 +274,43 @@ function App() {
               </h1>
             </div>
           </div>
-          <div className="bg-141D30 w-[73%] h-[85px] p-4 rounded-xl ml-[220px] dark:bg-[#12192A]  bg-white shadow-inputBoxShadow">
+          <div className="bg-141D30 w-[73%] h-[85px] p-4 rounded-xl ml-[220px] dark:bg-[#12192A] bg-white shadow-inputBoxShadow">
             <div className="flex gap-[80px]">
               <div className="ml-8">
                 <h1 className="text-base-content text-sm">Repos</h1>
                 <h1 className="text-base-content font-bold text-2xl">
                   {repos}
                 </h1>
+                <button
+                  className="text-blue-500 mt-2"
+                  onClick={() => handleOpenModal('Repos')}
+                >
+                  View Repos
+                </button>
               </div>
               <div>
                 <h1 className="text-base-content text-sm">Followers</h1>
                 <h1 className="text-base-content font-bold text-2xl">
                   {followers}
                 </h1>
+                <button
+                  className="text-blue-500 mt-2"
+                  onClick={() => handleOpenModal('Followers')}
+                >
+                  View Followers
+                </button>
               </div>
               <div>
                 <h1 className="text-base-content text-sm">Following</h1>
                 <h1 className="text-base-content font-bold text-2xl">
                   {following}
                 </h1>
+                <button
+                  className="text-blue-500 mt-2"
+                  onClick={() => handleOpenModal('Following')}
+                >
+                  View Following
+                </button>
               </div>
             </div>
           </div>
@@ -169,7 +324,7 @@ function App() {
                 <div className="flex gap-2 items-center mt-3">
                   <FaLink className="text-2xl" />
                   <a
-                    href={blog}
+                    href={blog} 
                     className="tracking-wide"
                     target="_blank"
                     rel="noopener noreferrer">
@@ -195,8 +350,23 @@ function App() {
               </div>
             </div>
           </div>
+          <div className="mt-8">
+            {categories && data && <Piechart categories={categories} data={data} />}
+          </div>
         </div>
       </form>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        data={
+          modalType === 'Repos'
+            ? reposList
+            : modalType === 'Followers'
+            ? followersList
+            : followingList
+        }
+        type={modalType}
+      />
     </div>
   );
 }
