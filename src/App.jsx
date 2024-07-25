@@ -220,6 +220,7 @@ function App() {
   };
 
   const handleOpenModal = (type) => {
+    console.log(`Opening modal of type: ${type}`);
     setModalType(type);
     setIsModalOpen(true);
   };
